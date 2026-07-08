@@ -1,60 +1,72 @@
-require("dotenv").config();
+process.on("unhandledRejection", (err) => console.error("Unhandled:", err?.message || err));
 
-const { Client, GatewayIntentBits } = require("discord.js");
+require("dotenv").config();
+const fs = require("fs");
+const path = require("path");
+const express = require("express");
+const { Client, GatewayIntentBits, Collection } = require("discord.js");
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
-  ]
+    GatewayIntentBits.MessageContent,
+  ],
 });
+
+client.commands = new Collection();
+
+const commandsPath = path.join(__dirname, "commands");
+const commandFiles = fs.readdirSync(commandsPath).filter(f => f.endsWith(".js"));
+
+for (const file of commandFiles) {
+  const command = require(path.join(commandsPath, file));
+  if (command?.name) {
+    client.commands.set(command.name, command);
+  }
+}
 
 client.once("ready", () => {
   console.log(`Bot login sebagai ${client.user.tag}`);
+  require("./handlers/scheduler").init(client);
 });
 
-client.on("messageCreate", (message) => {
-  if (message.author.bot) return;
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isCommand()) return;
 
-  if (message.content === "!ping") {
-    message.reply("Pong! 🏓");
+  const command = client.commands.get(interaction.commandName);
+  if (!command) return;
+
+  await interaction.deferReply().catch(() => {});
+
+  try {
+    await command.execute(interaction);
+  } catch (err) {
+    console.error(`Error /${interaction.commandName}:`, err.message || err);
+    await interaction.editReply("Terjadi kesalahan.").catch(() => {});
   }
-
-  if (message.content === "!acepyr") {
-    message.reply("Acepyr adalah proyek AI yang membantu pengguna memahami proyek, roadmap, tokenomics, testnet, dan FAQ.");
-  }
-
-  if (message.content === "!roadmap") {
-    message.reply("Roadmap Acepyr meliputi pengembangan AI, testnet, dan pertumbuhan ekosistem.");
-  }
-
-  if (message.content === "!faq") {
-    message.reply("Tanyakan: !acepyr, !roadmap, !help, !info, atau !ping");
-  }
-
-  if (message.content === "!help") {
-  message.reply(`
-📋 **Daftar Perintah**
-
-🏓 !ping
-🤖 !acepyr
-🗺️ !roadmap
-❓ !faq
-ℹ️ !info
-  `);
-}
-
-  if (message.content === "!info") {
-  message.reply(`
-🤖 **GM Discord Bot**
-
-Versi: 1.0.0
-Developer: maharani212
-Library: discord.js
-Runtime: Node.js
-  `);
-}
 });
+
+client.on("messageCreate", async (message) => {
+  if (message.author.bot || !message.content.startsWith("!")) return;
+
+  const args = message.content.slice(1).split(/\s+/);
+  const commandName = args.shift()?.toLowerCase();
+  const command = client.commands.get(commandName);
+  if (!command) return;
+
+  try {
+    if (command.executeMessage) {
+      await command.executeMessage(message, args);
+    }
+  } catch (err) {
+    console.error(`Error !${commandName}:`, err);
+    await message.reply("Terjadi kesalahan.").catch(() => {});
+  }
+});
+
+const app = express();
+app.get("/", (req, res) => res.send("Bot aktif"));
+app.listen(3000, () => console.log("Health server on :3000"));
 
 client.login(process.env.DISCORD_TOKEN);

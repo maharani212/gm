@@ -1,0 +1,7 @@
+{
+  "autoPost": {
+    "channelId": null,
+    "intervalMs": 3600000,
+    "enabled": false
+  }
+}

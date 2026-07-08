@@ -1,4 +1,4 @@
-const commands = [
+const list = [
   { n: "ping", d: "Check bot response" },
   { n: "acepyr", d: "Learn about Acepyr (overview, vectors, token, stats)" },
   { n: "ask", d: "Ask anything about Acepyr" },
@@ -10,14 +10,14 @@ const commands = [
 ];
 
 module.exports = {
-  name: "help",
-  description: "Tampilkan daftar perintah",
+  name: "commands",
+  description: "Show all available commands",
 
   async execute(interaction) {
-    await interaction.editReply("**Daftar Perintah**\n\n" + commands.map(c => `• **/${c.n}** — ${c.d}`).join("\n"));
+    await interaction.editReply("**Command List**\n\n" + list.map(c => `• **/${c.n}** — ${c.d}`).join("\n"));
   },
 
   async executeMessage(message) {
-    await message.reply("**Daftar Perintah**\n\n" + commands.map(c => `• **!${c.n}** — ${c.d}`).join("\n"));
+    await message.reply("**Command List**\n\n" + list.map(c => `• **!${c.n}** — ${c.d}`).join("\n"));
   },
 };

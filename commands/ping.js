@@ -1,7 +1,12 @@
 module.exports = {
   name: "ping",
+  description: "Check bot response",
 
-  execute(message) {
-    message.reply("🏓 Pong!");
+  async execute(interaction) {
+    await interaction.editReply("Pong! 🏓");
+  },
+
+  async executeMessage(message) {
+    await message.reply("Pong! 🏓");
   },
 };

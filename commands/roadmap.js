@@ -1,8 +1,15 @@
 module.exports = {
   name: "roadmap",
+  description: "Tampilkan roadmap Acepyr",
 
-  execute(message) {
-    message.reply(
+  async execute(interaction) {
+    await interaction.editReply(
+      "Roadmap Acepyr meliputi pengembangan AI, testnet, dan pertumbuhan ekosistem."
+    );
+  },
+
+  async executeMessage(message) {
+    await message.reply(
       "Roadmap Acepyr meliputi pengembangan AI, testnet, dan pertumbuhan ekosistem."
     );
   },
